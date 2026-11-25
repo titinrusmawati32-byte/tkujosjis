@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>PUSMENDIK - Aplikasi Simulasi TKA & ANBK</title>
+  <title>PUSMENDIK - Aplikasi Simulasi TKA & ANBK SD</title>
 
   <!-- Favicon SVG Data URI Instan (Mencegah tab browser berputar mencari favicon) -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%231E6091' stroke='%23ffffff' stroke-width='3'/%3E%3Cpath d='M32 14L12 24l20 10 20-10-20-10zm0 26l-14-7v9c0 5 6 9 14 9s14-4 14-9v-9l-14 7z' fill='%23F4B400'/%3E%3C/svg%3E" />
 
   <!-- PWA Manifest Data URI -->
-  <link rel="manifest" href='data:application/manifest+json,{"name":"Aplikasi Simulasi TKA PUSMENDIK","short_name":"Simulasi TKA","start_url":".","display":"fullscreen","background_color":"#EEF2F6","theme_color":"#1E6091"}' />
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Aplikasi Simulasi TKA & ANBK SD PUSMENDIK","short_name":"Simulasi TKA SD","start_url":".","display":"fullscreen","background_color":"#EEF2F6","theme_color":"#1E6091"}' />
   <meta name="theme-color" content="#1E6091" />
 
   <!-- Google Fonts: Poppins -->
@@ -292,9 +292,9 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
   // Aset SVG Lokal (Tanpa request jaringan eksternal yang membuat favicon berputar)
   const DEFAULT_LOGO_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cpolygon points='60,6 110,32 92,98 28,98 10,32' fill='%230055A5' stroke='%23FFD700' stroke-width='4'/%3E%3Ccircle cx='60' cy='56' r='30' fill='%23ffffff'/%3E%3Cpath d='M60 32L32 46l28 14 28-14-28-14zm-18 21v14c0 6 8 11 18 11s18-5 18-11V53l-18 9-18-9z' fill='%231E6091'/%3E%3C/svg%3E";
 
-  const DEFAULT_STIMULUS_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 760 280'%3E%3Crect width='760' height='280' fill='%2368B5E8'/%3E%3Crect x='40' y='40' width='90' height='240' fill='%23CBD5E1' stroke='%23475569' stroke-width='3'/%3E%3Crect x='240' y='130' width='480' height='150' fill='%23334155'/%3E%3Crect x='265' y='155' width='220' height='125' fill='%2394A3B8'/%3E%3Cpath d='M560 280 L630 165 L695 280 Z' fill='none' stroke='%23F59E0B' stroke-width='6'/%3E%3Ctext x='285' y='110' fill='%23ffffff' font-family='sans-serif' font-size='18' font-weight='bold'%3EILUSTRASI PROYEK RENOVASI GEDUNG (BISA DI-SCROLL)%3C/text%3E%3C/svg%3E";
+  const DEFAULT_STIMULUS_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 760 280'%3E%3Crect width='760' height='280' fill='%23E0F2FE' rx='16'/%3E%3Cpath d='M0 200 Q190 160 380 200 T760 200 L760 280 L0 280 Z' fill='%2386EFAC'/%3E%3Cpath d='M0 220 Q190 190 380 220 T760 220 L760 280 L0 280 Z' fill='%234ADE80'/%3E%3Ccircle cx='90' cy='60' r='36' fill='%23FDE047'/%3E%3Ccircle cx='90' cy='60' r='44' fill='%23FEF08A' opacity='0.4'/%3E%3Crect x='60' y='160' width='180' height='100' rx='12' fill='%23F87171' stroke='%23DC2626' stroke-width='4'/%3E%3Cpath d='M75 160 Q150 110 225 160' fill='none' stroke='%23B91C1C' stroke-width='6' stroke-linecap='round'/%3E%3Ccircle cx='110' cy='200' r='18' fill='%23EF4444'/%3E%3Ccircle cx='150' cy='195' r='20' fill='%23DC2626'/%3E%3Ccircle cx='190' cy='205' r='17' fill='%23EF4444'/%3E%3Ccircle cx='130' cy='225' r='19' fill='%23B91C1C'/%3E%3Ccircle cx='170' cy='230' r='18' fill='%23EF4444'/%3E%3Crect x='280' y='60' width='440' height='180' rx='16' fill='%23FFFFFF' stroke='%230284C7' stroke-width='3' filter='drop-shadow(0 4px 6px rgba(0,0,0,0.08))'/%3E%3Crect x='280' y='60' width='440' height='42' rx='16' fill='%230284C7'/%3E%3Ctext x='500' y='88' text-anchor='middle' fill='%23FFFFFF' font-family='sans-serif' font-size='16' font-weight='bold'%3EINFO HARGA KEBUN STROBERI CERIA%3C/text%3E%3Ctext x='310' y='130' fill='%230F172A' font-family='sans-serif' font-size='14' font-weight='bold'%3E🍓 1 Keranjang Stroberi = 500 Gram (0,5 Kg)%3C/text%3E%3Ctext x='310' y='160' fill='%230F172A' font-family='sans-serif' font-size='14' font-weight='bold'%3E🏷️ Harga Satuan = Rp 25.000,00 per keranjang%3C/text%3E%3Ctext x='310' y='195' fill='%23DC2626' font-family='sans-serif' font-size='13' font-weight='bold'%3E🎁 PROMO: Beli 4 keranjang atau lebih, DISKON Rp 10.000!%3C/text%3E%3Ctext x='310' y='225' fill='%230369A1' font-family='sans-serif' font-size='12'%3E*Budi memetik 2 keranjang, Siti memetik 3 keranjang%3C/text%3E%3C/svg%3E";
 
-  const SECOND_STIMULUS_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 760 260'%3E%3Crect width='760' height='260' fill='%23E0F2FE'/%3E%3Crect y='175' width='760' height='85' fill='%2364748B'/%3E%3Cline x1='580' y1='85' x2='580' y2='260' stroke='%23EF4444' stroke-width='7'/%3E%3Crect x='580' y='85' width='120' height='36' fill='%23EF4444'/%3E%3Ctext x='595' y='108' fill='%23ffffff' font-family='sans-serif' font-size='16' font-weight='bold'%3EFINISH LINE%3C/text%3E%3Ccircle cx='280' cy='125' r='18' fill='%230284C7'/%3E%3Cpath d='M280 143 L280 190 L250 225 M280 190 L310 225 M250 160 L310 160' stroke='%230284C7' stroke-width='7' stroke-linecap='round' fill='none'/%3E%3C/svg%3E";
+  const SECOND_STIMULUS_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 760 260'%3E%3Crect width='760' height='260' fill='%23FEF9C3' rx='16'/%3E%3Cpath d='M0 180 Q190 140 380 180 T760 180 L760 260 L0 260 Z' fill='%23BBF7D0'/%3E%3Ccircle cx='180' cy='150' r='42' fill='%23FFFFFF' stroke='%23CBD5E1' stroke-width='3'/%3E%3Cellipse cx='165' cy='85' rx='12' ry='38' fill='%23FFFFFF' stroke='%23CBD5E1' stroke-width='3' transform='rotate(-8 165 85)'/%3E%3Cellipse cx='165' cy='85' rx='6' ry='26' fill='%23FDA4AF' transform='rotate(-8 165 85)'/%3E%3Cellipse cx='195' cy='85' rx='12' ry='38' fill='%23FFFFFF' stroke='%23CBD5E1' stroke-width='3' transform='rotate(8 195 85)'/%3E%3Cellipse cx='195' cy='85' rx='6' ry='26' fill='%23FDA4AF' transform='rotate(8 195 85)'/%3E%3Ccircle cx='168' cy='142' r='5' fill='%231E293B'/%3E%3Ccircle cx='192' cy='142' r='5' fill='%231E293B'/%3E%3Cpolygon points='180,154 174,162 186,162' fill='%23F43F5E'/%3E%3Cpath d='M174 166 Q180 172 186 166' stroke='%231E293B' stroke-width='2' fill='none'/%3E%3Cpath d='M250 180 L290 130 L310 145 Z' fill='%23F97316' stroke='%23EA580C' stroke-width='3'/%3E%3Cpath d='M245 185 Q235 200 220 205' stroke='%2316A34A' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M248 185 Q250 205 240 215' stroke='%2316A34A' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Crect x='340' y='45' width='380' height='175' rx='16' fill='%23FFFFFF' stroke='%23F59E0B' stroke-width='3' filter='drop-shadow(0 4px 6px rgba(0,0,0,0.08))'/%3E%3Crect x='340' y='45' width='380' height='38' rx='16' fill='%23F59E0B'/%3E%3Ctext x='530' y='70' text-anchor='middle' fill='%23FFFFFF' font-family='sans-serif' font-size='15' font-weight='bold'%3EKIKOSI KELINCI & SAHABAT HUTAN%3C/text%3E%3Ctext x='365' y='110' fill='%231E293B' font-family='sans-serif' font-size='13' font-weight='bold'%3E📖 Cerita Fabel Pendidikan Karakter Anak SD%3C/text%3E%3Ctext x='365' y='140' fill='%23475569' font-family='sans-serif' font-size='12'%3E• Kiko memanen wortel segar untuk bekal musim hujan.%3C/text%3E%3Ctext x='365' y='165' fill='%23475569' font-family='sans-serif' font-size='12'%3E• Di jembatan, Kiko menolong Pak Kura-Kura renta.%3C/text%3E%3Ctext x='365' y='195' fill='%23059669' font-family='sans-serif' font-size='12' font-weight='bold'%3E🌟 Nilai: Tolong-menolong, ikhlas, dan kerja keras.%3C/text%3E%3C/svg%3E";
 
   // ============================================================================
   // STATE UTAMA APLIKASI
@@ -360,10 +360,10 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
     pengaturan: {
       id: 'cfg-1',
       nama_instansi: 'PUSMENDIK',
-      nama_aplikasi: 'APLIKASI ANBK',
-      nama_sekolah: 'SMP NEGERI 1 SIMULASI TKA',
+      nama_aplikasi: 'APLIKASI TKA & ANBK SD',
+      nama_sekolah: 'SD NEGERI 1 SIMULASI TKA',
       logo_url: DEFAULT_LOGO_SVG,
-      token_aktif: 'TKA26A',
+      token_aktif: 'SD26A',
       max_pelanggaran: 3
     },
     ruangList: [],
@@ -410,38 +410,40 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
   const initPreviewDummyData = () => {
     if (!IS_PREVIEW) return;
     state.ruangList = [
-      { id: 'ruang-1', kode_ruang: 'R-LAB1', nama_ruang: 'Lab Komputer 1', keterangan: 'Gedung Utama Lt. 1' },
-      { id: 'ruang-2', kode_ruang: 'R-LAB2', nama_ruang: 'Lab Komputer 2', keterangan: 'Gedung Utama Lt. 2' }
+      { id: 'ruang-1', kode_ruang: 'R-LAB1', nama_ruang: 'Lab Komputer SD 1', keterangan: 'Gedung Utama Lt. 1' },
+      { id: 'ruang-2', kode_ruang: 'R-LAB2', nama_ruang: 'Lab Komputer SD 2', keterangan: 'Gedung Utama Lt. 2' }
     ];
     state.sesiList = [
-      { id: 'sesi-1', nama_sesi: 'Sesi 1', jam_mulai: '07:30', jam_selesai: '09:30' },
-      { id: 'sesi-2', nama_sesi: 'Sesi 2', jam_mulai: '10:00', jam_selesai: '12:00' }
+      { id: 'sesi-1', nama_sesi: 'Sesi 1 (Pagi)', jam_mulai: '07:30', jam_selesai: '09:00' },
+      { id: 'sesi-2', nama_sesi: 'Sesi 2 (Siang)', jam_mulai: '09:30', jam_selesai: '11:00' }
     ];
     state.mapelList = [
-      { id: 'mapel-1', kode_mapel: 'MAT-SMP-1', nama_mapel: 'Matematika - SMP Sederajat (Paket 1)', durasi_menit: 75, aktif: true },
-      { id: 'mapel-2', kode_mapel: 'LIT-SMP-1', nama_mapel: 'Literasi Membaca - SMP Sederajat (Paket 1)', durasi_menit: 60, aktif: true }
+      { id: 'mapel-1', kode_mapel: 'NUM-SD-01', nama_mapel: 'Numerasi (Matematika) - SD/MI Sederajat (Fase C)', durasi_menit: 60, aktif: true },
+      { id: 'mapel-2', kode_mapel: 'LIT-SD-01', nama_mapel: 'Literasi Membaca - SD/MI Sederajat (Fase C)', durasi_menit: 60, aktif: true }
     ];
     state.siswaList = [
-      { id: 'siswa-1', username: 'sds', password: '123', nama_lengkap: 'sds - PESERTA TKA', jenis_kelamin: 'Laki-Laki', tgl_lahir: '15-05-2011', ruang_id: 'ruang-1' },
-      { id: 'siswa-2', username: 'pst02', password: '123', nama_lengkap: 'Siti Nurhaliza Putri', jenis_kelamin: 'Perempuan', tgl_lahir: '20-08-2011', ruang_id: 'ruang-2' }
+      { id: 'siswa-1', username: 'sds', password: '123', nama_lengkap: 'Alif Bintang Pratama', jenis_kelamin: 'Laki-Laki', tgl_lahir: '14-06-2014', ruang_id: 'ruang-1' },
+      { id: 'siswa-2', username: 'pst02', password: '123', nama_lengkap: 'Naila Putri Kirana', jenis_kelamin: 'Perempuan', tgl_lahir: '22-09-2014', ruang_id: 'ruang-1' },
+      { id: 'siswa-3', username: 'pst03', password: '123', nama_lengkap: 'Rian Aditya Saputra', jenis_kelamin: 'Laki-Laki', tgl_lahir: '08-01-2015', ruang_id: 'ruang-2' }
     ];
     state.jadwalPesertaList = [
       { id: 'jp-1', siswa_id: 'siswa-1', mapel_id: 'mapel-1', ruang_id: 'ruang-1', sesi_id: 'sesi-1', hari: 'Senin', tanggal: '2026-05-18' },
-      { id: 'jp-2', siswa_id: 'siswa-1', mapel_id: 'mapel-2', ruang_id: 'ruang-1', sesi_id: 'sesi-2', hari: 'Selasa', tanggal: '2026-05-19' }
+      { id: 'jp-2', siswa_id: 'siswa-1', mapel_id: 'mapel-2', ruang_id: 'ruang-1', sesi_id: 'sesi-2', hari: 'Selasa', tanggal: '2026-05-19' },
+      { id: 'jp-3', siswa_id: 'siswa-2', mapel_id: 'mapel-1', ruang_id: 'ruang-1', sesi_id: 'sesi-1', hari: 'Senin', tanggal: '2026-05-18' }
     ];
     state.stimulusList = [
       {
         id: 'stim-1',
         mapel_id: 'mapel-1',
-        judul: 'Proyek Renovasi Gedung',
-        konten_teks: '<p>Proyek renovasi suatu gedung sekolah harus diselesaikan paling lambat dalam waktu 60 hari sesuai dengan kontrak kerja yang telah disepakati bersama. Manajer proyek telah menghitung kebutuhan tenaga kerja dengan asumsi setiap pegawai memiliki kemampuan dan produktivitas yang sama setiap harinya.</p><p>Kemajuan proyek sangat bergantung pada jumlah pegawai; semakin banyak pegawai yang bekerja, maka waktu pengerjaan akan semakin singkat. Selain itu, manajer juga memantau distribusi logistik bahan bangunan setiap pekan agar tidak terjadi keterlambatan pasokan material utama.</p>',
+        judul: 'Panen Buah di Kebun Stroberi Ceria',
+        konten_teks: '<p>Pada hari Minggu yang cerah, Budi, Siti, dan teman-teman sekelasnya berkunjung ke Kebun Stroberi Ceria di lereng bukit. Setiap anak diberikan sebuah keranjang kecil untuk memetik buah stroberi sendiri langsung dari pohonnya.</p><p>Pengelola kebun menetapkan beberapa aturan pembelian buah:</p><ul><li>Berat 1 keranjang stroberi rata-rata adalah <b>500 gram</b> (setengah kilogram).</li><li>Harga 1 keranjang stroberi adalah <b>Rp25.000,00</b>.</li><li>Jika membeli <b>4 keranjang atau lebih</b>, pembeli berhak mendapatkan potongan harga (diskon) sebesar <b>Rp10.000,00</b> dari total pembayaran.</li></ul><p>Budi berhasil memetik 2 keranjang penuh, sedangkan Siti berhasil memetik 3 keranjang stroberi. Mereka memutuskan untuk menggabungkan keranjang belanjaan mereka saat membayar di kasir agar mendapatkan potongan harga.</p>',
         gambar_url: DEFAULT_STIMULUS_SVG
       },
       {
         id: 'stim-2',
         mapel_id: 'mapel-1',
-        judul: 'Kisah Pelari Maraton Terakhir',
-        konten_teks: '<p>Pada perlombaan maraton tahunan di kota tersebut, seorang pelari berusia lanjut tetap melangkah dengan tenang meskipun hari mulai sore. Panitia tetap menyalakan lampu di garis finis untuk menghormati perjuangannya.</p><p><i>(Ilustrasi gambar diletakkan penulis tepat sebelum paragraf penutup di bawah ini)</i></p><p>Saat pelari terakhir tersebut akhirnya melintasi garis finis, seluruh penonton berdiri memberikan tepuk tangan meriah karena ketekunan menyelesaikan apa yang telah dimulai adalah hal yang sangat berharga.</p>',
+        judul: 'Kelinci Putih dan Keranjang Wortel Sahabat',
+        konten_teks: '<p>Di sebuah hutan pinus yang asri, hiduplah Kiko si kelinci putih yang lincah dan ramah. Suatu pagi menjelang musim hujan, Kiko bekerja keras memanen wortel segar di kebun sayurnya. Kiko ingin mengumpulkan bekal makanan yang cukup untuk keluarganya di rumah.</p><p>Ketika sedang memikul keranjang wortel yang berat melewati jembatan kayu, Kiko melihat Pak Kura-Kura sedang berjalan tertatih-tatih membawa seikat kayu bakar. Tanpa berpikir panjang, Kiko meletakkan keranjangnya dan berlari menolong membawakan kayu bakar tersebut sampai ke gubuk Pak Kura-Kura.</p><p>Sebagai tanda terima kasih, Pak Kura-Kura memberi Kiko segelas madu bunga hutan yang manis dan mendoakan kebaikan untuk Kiko. Kiko merasa sangat gembira karena bisa meringankan beban orang tua yang membutuhkan pertolongan.</p>',
         gambar_url: SECOND_STIMULUS_SVG
       }
     ];
@@ -452,11 +454,11 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
         stimulus_id: 'stim-1',
         nomor_urut: 1,
         jenis_soal: 'PG',
-        pertanyaan: 'Berdasarkan perencanaan awal, renovasi gedung dapat diselesaikan oleh 12 pegawai dalam waktu 60 hari. Jika manajer memutuskan untuk menambah jumlah pegawai menjadi 18 orang agar pekerjaan lebih cepat selesai, maka waktu yang diperlukan untuk menyelesaikan renovasi tersebut adalah...',
-        opsi_a: '30 hari',
-        opsi_b: '40 hari',
-        opsi_c: '45 hari',
-        opsi_d: '90 hari',
+        pertanyaan: 'Berdasarkan cerita di atas, berapa total uang yang harus dibayarkan oleh Budi dan Siti di kasir setelah keranjang mereka digabungkan dan memperoleh potongan harga?',
+        opsi_a: 'Rp100.000,00',
+        opsi_b: 'Rp115.000,00',
+        opsi_c: 'Rp125.000,00',
+        opsi_d: 'Rp135.000,00',
         opsi_e: '',
         kunci_jawaban: 'B',
         bobot: 25
@@ -467,11 +469,11 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
         stimulus_id: 'stim-1',
         nomor_urut: 2,
         jenis_soal: 'PGK',
-        pertanyaan: 'Manakah di antara pernyataan berikut yang BENAR terkait proyek renovasi gedung tersebut? (Klik pada kotak ceklis, jawaban benar lebih dari satu!)',
-        opsi_a: 'Jika jumlah pegawai menjadi 24 orang, pekerjaan selesai dalam 30 hari.',
-        opsi_b: 'Hubungan antara jumlah pegawai dan waktu pengerjaan adalah perbandingan berbalik nilai.',
-        opsi_c: 'Semakin sedikit pegawai, waktu pengerjaan semakin cepat selesai.',
-        opsi_d: 'Target penyelesaian proyek dalam waktu 20 hari membutuhkan 36 pegawai.',
+        pertanyaan: 'Manakah di antara pernyataan berikut yang BENAR terkait pembelian stroberi oleh Budi dan Siti? (Pilihlah dengan mengklik kotak ceklis, jawaban benar lebih dari satu!)',
+        opsi_a: 'Total berat seluruh stroberi yang dipetik Budi dan Siti bersama-sama adalah 2.500 gram (2,5 kg).',
+        opsi_b: 'Jika Siti membayar 3 keranjangnya sendirian tanpa digabung dengan Budi, Siti tidak memperoleh potongan harga.',
+        opsi_c: 'Total stroberi yang dipetik oleh Budi memiliki berat 2 kilogram.',
+        opsi_d: 'Keputusan menggabungkan belanjaan membuat Budi dan Siti berhasil berhemat sebesar Rp10.000,00.',
         opsi_e: '',
         kunci_jawaban: 'A,B,D',
         bobot: 25
@@ -482,10 +484,10 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
         stimulus_id: 'stim-2',
         nomor_urut: 3,
         jenis_soal: 'BS',
-        pertanyaan: 'Mengapa penulis meletakkan gambar sebelum paragraf terakhir dalam cerita?',
-        opsi_a: 'Menunjukkan gambaran fisik wanita tua yang mengikuti lomba maraton.',
-        opsi_b: 'Membantu pembaca membayangkan momen pelari terakhir melintasi garis finis.',
-        opsi_c: 'Memperkuat pesan bahwa menyelesaikan sesuatu yang telah dimulai adalah berharga.',
+        pertanyaan: 'Tentukan Benar atau Salah untuk setiap pernyataan berikut berdasarkan isi cerita fabel "Kelinci Putih dan Keranjang Wortel Sahabat"!',
+        opsi_a: 'Kiko menolong Pak Kura-Kura karena sejak awal mengharapkan imbalan madu bunga hutan.',
+        opsi_b: 'Pak Kura-Kura merasa sangat terbantu dan bersyukur atas ketulusan hati Kiko.',
+        opsi_c: 'Kiko giat memanen wortel segar sebagai bekal persediaan menghadapi musim hujan.',
         opsi_d: '',
         opsi_e: '',
         kunci_jawaban: 'S,B,B',
@@ -497,13 +499,13 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
         stimulus_id: 'stim-2',
         nomor_urut: 4,
         jenis_soal: 'PGK',
-        pertanyaan: 'Sikap keteladanan apa saja yang dapat diambil dari kutipan cerita "Kisah Pelari Maraton Terakhir"? (Pilih lebih dari satu kotak ceklis!)',
-        opsi_a: 'Pantang menyerah menyelesaikan apa yang sudah dimulai.',
-        opsi_b: 'Menghargai usaha orang lain meskipun menjadi yang terakhir.',
-        opsi_c: 'Berhenti berlari ketika peserta lain sudah mencapai garis finis.',
-        opsi_d: 'Memberikan dukungan positif kepada sesama peserta.',
+        pertanyaan: 'Sikap keteladanan apa sajakah yang dapat kita tiru dari perbuatan Kiko si kelinci putih? (Klik pada kotak ceklis, jawaban benar lebih dari satu!)',
+        opsi_a: 'Ikhlas menolong orang lain yang sedang kesusahan tanpa pamrih.',
+        opsi_b: 'Rajin bekerja dan mempersiapkan kebutuhan sebelum masa sulit tiba.',
+        opsi_c: 'Menghargai dan berterima kasih atas setiap bantuan yang diterima.',
+        opsi_d: 'Meninggalkan orang yang kesulitan agar urusan sendiri cepat beres.',
         opsi_e: '',
-        kunci_jawaban: 'A,B,D',
+        kunci_jawaban: 'A,B,C',
         bobot: 25
       }
     ];
@@ -512,7 +514,7 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
         id: 'hasil-1',
         siswa_id: 'siswa-2',
         mapel_id: 'mapel-1',
-        jawaban_siswa: { 'soal-1': 'B', 'soal-2': ['A', 'B', 'D'], 'soal-3': { A: 'S', B: 'B', C: 'B' }, 'soal-4': ['A', 'B', 'D'] },
+        jawaban_siswa: { 'soal-1': 'B', 'soal-2': ['A', 'B', 'D'], 'soal-3': { A: 'S', B: 'B', C: 'B' }, 'soal-4': ['A', 'B', 'C'] },
         skor: 100,
         jumlah_pelanggaran: 0,
         status: 'Selesai',
@@ -528,11 +530,11 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
         mapel_id: 'mapel-1',
         jawaban_siswa: { 'soal-1': 'B', 'soal-2': ['A', 'B'] },
         skor: 0,
-        jumlah_pelanggaran: 1,
+        jumlah_pelanggaran: 0,
         status: 'Sedang Mengerjakan',
         aktivitas_terakhir: 'Sedang mengerjakan Soal No. 3 (Terjawab 2/4)',
         soal_aktif: 3,
-        log_kecurangan: ['17:05:12 - Keluar dari mode Layar Penuh (Fullscreen)'],
+        log_kecurangan: [],
         waktu_mulai: new Date(Date.now() - 600000).toISOString(),
         waktu_selesai: new Date().toISOString()
       }
@@ -939,7 +941,7 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
       { val: '07', label: 'Juli' }, { val: '08', label: 'Agustus' }, { val: '09', label: 'September' },
       { val: '10', label: 'Oktober' }, { val: '11', label: 'November' }, { val: '12', label: 'Desember' }
     ];
-    const years = Array.from({ length: 20 }, (_, i) => String(2005 + i));
+    const years = Array.from({ length: 10 }, (_, i) => String(2011 + i));
 
     const studentRightBadge = `
       <div class="flex items-center gap-2.5">
@@ -2478,7 +2480,7 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
             <div>
               <label class="block text-[10px] font-semibold text-slate-500 mb-1">Tgl Lahir (DD-MM-YYYY)</label>
               <div class="flex gap-1.5">
-                <input type="text" id="s-tgl" required placeholder="15-05-2011" value="${editingSiswa ? editingSiswa.tgl_lahir : '15-05-2011'}" class="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-200" />
+                <input type="text" id="s-tgl" required placeholder="14-06-2014" value="${editingSiswa ? editingSiswa.tgl_lahir : '14-06-2014'}" class="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-200" />
                 <button type="submit" class="bg-[#0066FF] hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold shrink-0 transition">
                   ${editingSiswa ? 'Update' : 'Simpan'}
                 </button>
@@ -2798,10 +2800,10 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
           <h3 class="font-bold text-slate-800 text-sm mb-1">${editingMapel ? 'Edit Mata Ujian & Paket Soal' : 'Tambah Mata Ujian & Paket Soal Baru'}</h3>
           <p class="text-[11px] text-slate-500 mb-4">Setelah menambahkan mata pelajaran, klik tombol <b>"Buka & Kelola Soal"</b> pada tabel di bawah untuk membuka editor stimulus dan soal berdampingan.</p>
           <form onsubmit="window.app.handleAddMapel(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <input type="text" id="m-kode" required value="${editingMapel ? editingMapel.kode_mapel : ''}" placeholder="Kode Mapel (MAT-SMP-1)" class="px-3 py-2 text-xs rounded-xl border border-slate-200" />
-            <input type="text" id="m-nama" required value="${editingMapel ? editingMapel.nama_mapel : ''}" placeholder="Nama Mapel (Matematika - SMP Sederajat (Paket 1))" class="px-3 py-2 text-xs rounded-xl border border-slate-200 md:col-span-2" />
+            <input type="text" id="m-kode" required value="${editingMapel ? editingMapel.kode_mapel : ''}" placeholder="Kode Mapel (NUM-SD-01)" class="px-3 py-2 text-xs rounded-xl border border-slate-200" />
+            <input type="text" id="m-nama" required value="${editingMapel ? editingMapel.nama_mapel : ''}" placeholder="Nama Mapel (Numerasi - SD/MI Sederajat (Fase C))" class="px-3 py-2 text-xs rounded-xl border border-slate-200 md:col-span-2" />
             <div class="flex gap-2">
-              <input type="number" id="m-durasi" required placeholder="Durasi (Menit)" value="${editingMapel ? editingMapel.durasi_menit : '75'}" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200" />
+              <input type="number" id="m-durasi" required placeholder="Durasi (Menit)" value="${editingMapel ? editingMapel.durasi_menit : '60'}" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200" />
               <button type="submit" class="bg-[#0066FF] hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-semibold shrink-0 transition">
                 <i class="fa-solid ${editingMapel ? 'fa-check' : 'fa-plus'} mr-1"></i>${editingMapel ? 'Update' : 'Tambah'}
               </button>
@@ -3643,17 +3645,17 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
         id: 'siswa-1',
         username: 'sds',
         password: '123',
-        nama_lengkap: 'sds - PESERTA TKA',
+        nama_lengkap: 'Alif Bintang Pratama',
         jenis_kelamin: 'Laki-Laki',
-        tgl_lahir: '15-05-2011',
+        tgl_lahir: '14-06-2014',
         ruang_id: 'ruang-1'
       };
       state.currentSiswa = s;
       state.konfirmasiInput = {
         ketikNama: s.nama_lengkap,
-        hari: '15',
-        bulan: '05',
-        tahun: '2011',
+        hari: '14',
+        bulan: '06',
+        tahun: '2014',
         token: state.pengaturan.token_aktif
       };
       state.currentView = 'konfirmasi_siswa';
@@ -3666,9 +3668,9 @@ const SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
         id: 'siswa-1',
         username: 'sds',
         password: '123',
-        nama_lengkap: 'sds - PESERTA TKA',
+        nama_lengkap: 'Alif Bintang Pratama',
         jenis_kelamin: 'Laki-Laki',
-        tgl_lahir: '15-05-2011',
+        tgl_lahir: '14-06-2014',
         ruang_id: 'ruang-1'
       };
       state.currentSiswa = s;
