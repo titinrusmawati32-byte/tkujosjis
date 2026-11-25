@@ -18,6 +18,8 @@ Aplikasi WebApp PWA Single-File mandiri untuk **Simulasi TKA (Tes Kemampuan Akad
   - *Panen Buah di Kebun Stroberi Ceria* (Numerasi kontekstual: berhitung keranjang, berat gram/kg, diskon belanjaan).
   - *Kelinci Putih dan Keranjang Wortel Sahabat* (Literasi fabel pendidikan karakter: tolong-menolong dan kerja keras).
 - **Format Soal Variatif**: Pilihan Ganda (PG), Pilihan Ganda Kompleks (PGK kotak ceklis > 1 jawaban benar), dan Tabel Benar/Salah (BS).
+- **Upload Soal Massal (Excel `.xlsx` / `.csv`)**: Guru bisa mengunduh template Excel, menyusun puluhan soal sekaligus (otomatis mengelompokkan soal dengan judul stimulus yang sama), meninjau preview, lalu menyimpan ke database.
+- **Upload Gambar Langsung**: Editor stimulus mendukung upload gambar langsung dari komputer/HP dengan kompresi otomatis.
 - **Rentang Umur & Tanggal Lahir**: Disesuaikan untuk anak usia 9–13 tahun (tahun lahir 2011–2018).
 
 ---

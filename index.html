@@ -26,6 +26,9 @@
   <!-- Supabase JS CDN (UMD) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- SheetJS (XLSX) CDN untuk Import & Export Template Soal Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -318,6 +321,11 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
     editingSoalId: null,
     builderJenisSoal: 'PG',
     showImportSiswaModal: false,
+    uploadTargetMapelId: '',
+    uploadPreviewRows: [],
+    uploadFileName: '',
+    isUploadingSoal: false,
+    isUploadingGambar: false,
 
     // Filter Rekap Hasil
     filterHasilMapelId: '',
@@ -555,6 +563,10 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
     if (state.tokenTimerInterval) clearInterval(state.tokenTimerInterval);
     state.tokenTimerInterval = setInterval(async () => {
       if (!state.autoRotateTokenEnabled) return;
+      // Hanya Admin yang login (atau mode preview admin) yang berhak merotasi token secara otomatis
+      if (!IS_PREVIEW && !state.adminSession) return;
+      if (state.currentView !== 'admin_dashboard') return;
+
       state.tokenCountdownSec -= 1;
 
       if (state.tokenCountdownSec <= 0) {
@@ -654,17 +666,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
   const fetchAllDatabase = async () => {
     if (IS_PREVIEW || !supabase) return;
     try {
-      const [
-        { data: cfg },
-        { data: rng },
-        { data: ses },
-        { data: mpl },
-        { data: sis },
-        { data: jdw },
-        { data: stm },
-        { data: sol },
-        { data: hsl }
-      ] = await Promise.all([
+      const results = await Promise.all([
         supabase.from('pengaturan_sekolah').select('*').limit(1),
         supabase.from('ruang_ujian').select('*').order('created_at'),
         supabase.from('sesi_ujian').select('*').order('created_at'),
@@ -676,15 +678,23 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
         supabase.from('hasil_ujian').select('*').order('waktu_selesai', { ascending: false })
       ]);
 
-      if (cfg && cfg[0]) state.pengaturan = cfg[0];
-      state.ruangList = rng || [];
-      state.sesiList = ses || [];
-      state.mapelList = mpl || [];
-      state.siswaList = sis || [];
-      state.jadwalPesertaList = jdw || [];
-      state.stimulusList = stm || [];
-      state.soalList = sol || [];
-      state.hasilList = hsl || [];
+      const firstError = results.find(r => r.error)?.error;
+      if (firstError) {
+        console.error('Supabase fetch error:', firstError);
+        showToast('Database belum siap / error: ' + firstError.message, 'warning');
+      }
+
+      const [cfgRes, rngRes, sesRes, mplRes, sisRes, jdwRes, stmRes, solRes, hslRes] = results;
+
+      if (cfgRes.data && cfgRes.data[0]) state.pengaturan = cfgRes.data[0];
+      state.ruangList = rngRes.data || [];
+      state.sesiList = sesRes.data || [];
+      state.mapelList = mplRes.data || [];
+      state.siswaList = sisRes.data || [];
+      state.jadwalPesertaList = jdwRes.data || [];
+      state.stimulusList = stmRes.data || [];
+      state.soalList = solRes.data || [];
+      state.hasilList = hslRes.data || [];
     } catch (err) {
       showToast('Gagal memuat database Supabase: ' + err.message, 'error');
     }
@@ -988,7 +998,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
                     >
                       ${activeMapels.map(m => {
                         const done = isMapelAlreadyFinished(s?.id, m.id);
-                        return `<option value="${m.id}" ${m.id === state.selectedMapelId ? 'selected' : ''}>${m.nama_mapel} ${done ? 'â€” [SUDAH DIKERJAKAN]' : ''}</option>`;
+                        return `<option value="${m.id}" ${m.id === state.selectedMapelId ? 'selected' : ''}>${m.nama_mapel} ${done ? '— [SUDAH DIKERJAKAN]' : ''}</option>`;
                       }).join('')}
                     </select>
                   ` : `
@@ -1619,7 +1629,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
                   type="password"
                   id="admin-password"
                   required
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="••••••••"
                   value="${IS_PREVIEW ? 'admin123' : ''}"
                   class="w-full text-sm px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-blue-600 focus:outline-none"
                 />
@@ -1647,6 +1657,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
       { id: 'ruang', icon: 'fa-door-open', label: 'Data Ruang' },
       { id: 'sesi', icon: 'fa-clock', label: 'Data Sesi' },
       { id: 'mapel', icon: 'fa-book-open', label: 'Data Mapel & Bank Soal' },
+      { id: 'upload_soal', icon: 'fa-file-arrow-up', label: 'Upload Soal' },
       { id: 'siswa', icon: 'fa-users', label: 'Data Siswa & Kartu' },
       { id: 'pengaturan_sesi', icon: 'fa-calendar-check', label: 'Pengaturan Sesi Peserta' },
       { id: 'hasil', icon: 'fa-square-poll-vertical', label: 'Hasil & Monitoring' },
@@ -1720,6 +1731,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
             ${state.adminTab === 'ruang' ? renderTabRuang() : ''}
             ${state.adminTab === 'sesi' ? renderTabSesi() : ''}
             ${state.adminTab === 'mapel' ? renderTabMapel() : ''}
+            ${state.adminTab === 'upload_soal' ? renderTabUploadSoal() : ''}
             ${state.adminTab === 'siswa' ? renderTabSiswa() : ''}
             ${state.adminTab === 'pengaturan_sesi' ? renderTabPengaturanSesi() : ''}
             ${state.adminTab === 'hasil' ? renderTabHasil() : ''}
@@ -1922,7 +1934,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
                 <h3 class="font-bold text-slate-800 text-sm">Aktivitas Peserta Real-Time Terbaru</h3>
               </div>
               <button onclick="window.app.setAdminTab('hasil')" class="text-xs font-semibold text-blue-600 hover:underline">
-                Lihat Semua Monitoring â†’
+                Lihat Semua Monitoring →
               </button>
             </div>
 
@@ -2281,7 +2293,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
                     <td class="py-3 px-2.5">
                       <div class="font-bold text-slate-800">${row.siswa.nama_lengkap}</div>
                       <div class="text-[11px] font-mono text-blue-600">User: ${row.siswa.username}</div>
-                      <div class="text-[10px] text-slate-500">${row.ruang ? row.ruang.nama_ruang : 'Tanpa Ruang'} ${row.sesi ? `â€¢ ${row.sesi.nama_sesi}` : ''}</div>
+                      <div class="text-[10px] text-slate-500">${row.ruang ? row.ruang.nama_ruang : 'Tanpa Ruang'} ${row.sesi ? `• ${row.sesi.nama_sesi}` : ''}</div>
                     </td>
                     <td class="py-3 px-2.5 font-medium text-slate-700">${row.mapel.nama_mapel}</td>
                     <td class="py-3 px-2.5">
@@ -2309,8 +2321,8 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
                           </span>
                           <div class="bg-rose-50/80 border border-rose-200 rounded-lg p-1.5 text-[10px] text-rose-800 space-y-0.5 max-h-20 overflow-y-auto">
                             ${row.logs.length > 0
-                              ? row.logs.map(lg => `<div>â€¢ ${lg}</div>`).join('')
-                              : '<div>â€¢ Keluar dari layar penuh / membuka aplikasi lain</div>'}
+                              ? row.logs.map(lg => `<div>• ${lg}</div>`).join('')
+                              : '<div>• Keluar dari layar penuh / membuka aplikasi lain</div>'}
                           </div>
                         </div>
                       `}
@@ -2534,7 +2546,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
                               <div class="text-[10px] bg-slate-100 px-2 py-1 rounded border border-slate-200">
                                 <strong class="text-slate-800">${m ? m.kode_mapel : 'Mapel'}:</strong>
                                 <span class="text-indigo-700 font-semibold">${jp.hari || '-'}, ${ss ? `${ss.nama_sesi} (${ss.jam_mulai}-${ss.jam_selesai})` : '-'}</span>
-                                <span class="text-emerald-700 font-semibold">â€¢ ${r ? r.nama_ruang : 'Tanpa Ruang'}</span>
+                                <span class="text-emerald-700 font-semibold">• ${r ? r.nama_ruang : 'Tanpa Ruang'}</span>
                               </div>
                             `;
                           }).join('')}
@@ -3203,7 +3215,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
                           ${bs.jenis_soal === 'PGK' ? 'PG Kompleks (Ceklis)' : bs.jenis_soal === 'BS' ? 'Benar / Salah' : 'PG Biasa'}
                         </span>
                         <span class="text-emerald-700 font-semibold">Kunci: ${bs.kunci_jawaban}</span>
-                        <span class="text-slate-400">â€¢ Bobot: ${bs.bobot}</span>
+                        <span class="text-slate-400">• Bobot: ${bs.bobot}</span>
                       </div>
                       <p class="text-slate-700 font-medium">${bs.pertanyaan}</p>
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-1 text-[11px] text-slate-500 pt-1">
@@ -3228,6 +3240,208 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
             `}
           </div>
         </div>
+      </div>
+    `;
+  };
+
+
+  // --- SUB-TAB BARU: UPLOAD SOAL MASSAL (EXCEL / CSV + PREVIEW + PENGELOMPOKAN STIMULUS) ---
+  const renderTabUploadSoal = () => {
+    if (!state.uploadTargetMapelId && state.mapelList.length > 0) {
+      state.uploadTargetMapelId = state.mapelList[0].id;
+    }
+
+    const previewRows = state.uploadPreviewRows || [];
+    const validRows = previewRows.filter(r => r.valid);
+    const invalidRows = previewRows.filter(r => !r.valid);
+    const uniqueStimuliCount = new Set(validRows.map(r => r.judul_stimulus).filter(Boolean)).size;
+
+    return `
+      <div class="space-y-6">
+        <!-- HEADER & DOWNLOAD TEMPLATE EXCEL -->
+        <div class="bg-white rounded-2xl p-6 shadow-xs border border-slate-100">
+          <div class="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-slate-100">
+            <div class="space-y-1 max-w-2xl">
+              <div class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                <i class="fa-solid fa-file-excel"></i> Import Bank Soal Cepat (Khusus SD/MI)
+              </div>
+              <h3 class="font-bold text-slate-800 text-base">Upload Soal Massal via Excel (.xlsx / .csv)</h3>
+              <p class="text-xs text-slate-500 leading-relaxed">
+                Unggah puluhan butir soal (<b>PG Biasa</b>, <b>PG Kompleks Ceklis</b>, dan <b>Benar/Salah</b>) sekaligus.
+                Jika beberapa soal menggunakan <b>Judul Stimulus</b> yang sama, sistem otomatis menggabungkannya ke dalam 1 wacana stimulus tanpa duplikat!
+              </p>
+            </div>
+            <button
+              onclick="window.app.downloadTemplateSoalExcel()"
+              class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm transition shrink-0"
+            >
+              <i class="fa-solid fa-download"></i>
+              <span>Download Template Excel (.xlsx)</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-5">
+            <!-- KIRI: PILIH MAPEL & UNGGAH FILE EXCEL/CSV -->
+            <div class="lg:col-span-6 space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">1. Pilih Mata Ujian Target</label>
+                ${state.mapelList.length === 0 ? `
+                  <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex items-center justify-between gap-2">
+                    <span>Belum ada Mata Ujian. Buat Mapel terlebih dahulu.</span>
+                    <button onclick="window.app.setAdminTab('mapel')" class="bg-amber-500 text-slate-950 px-3 py-1 rounded-lg font-bold text-[11px]">Buat Mapel</button>
+                  </div>
+                ` : `
+                  <select
+                    onchange="window.app.setUploadTargetMapel(this.value)"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-none"
+                  >
+                    ${state.mapelList.map(m => `
+                      <option value="${m.id}" ${state.uploadTargetMapelId === m.id ? 'selected' : ''}>
+                        ${m.kode_mapel} — ${m.nama_mapel}
+                      </option>
+                    `).join('')}
+                  </select>
+                `}
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">2. Unggah File Excel (.xlsx, .xls) atau CSV (.csv)</label>
+                <label class="flex flex-col items-center justify-center border-2 border-dashed border-blue-300 hover:border-blue-500 bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-6 cursor-pointer transition text-center">
+                  <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl mb-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                  </div>
+                  <div class="text-xs font-bold text-slate-800">
+                    ${state.uploadFileName ? `File Terpilih: <span class="text-blue-600">${state.uploadFileName}</span>` : 'Klik di sini untuk memilih file Excel (.xlsx / .csv)'}
+                  </div>
+                  <p class="text-[11px] text-slate-500 mt-1">Gunakan format kolom sesuai Template Excel di atas</p>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    class="hidden"
+                    onchange="window.app.handleSoalExcelFileUpload(event)"
+                  />
+                </label>
+              </div>
+            </div>
+
+            <!-- KANAN: COPY-PASTE LANGSUNG DARI EXCEL & PANDUAN KUNCI -->
+            <div class="lg:col-span-6 space-y-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Atau Paste Langsung Baris dari Excel / Google Sheets (Tab-Separated):</label>
+                <textarea
+                  id="upload-soal-paste-raw"
+                  rows="5"
+                  placeholder="1&#9;Kebun Stroberi&#9;Teks bacaan...&#9;&#9;PG&#9;Berapa harga 2 keranjang?&#9;Rp25.000&#9;Rp50.000&#9;Rp75.000&#9;Rp100.000&#9;&#9;B&#9;25"
+                  class="w-full p-3 rounded-xl border border-slate-200 font-mono text-[11px] bg-slate-50 focus:bg-white focus:border-blue-600 focus:outline-none"
+                ></textarea>
+                <div class="flex justify-end mt-2">
+                  <button
+                    type="button"
+                    onclick="window.app.parsePastedSoalText()"
+                    class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition"
+                  >
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Preview Data Paste</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-[11px] text-slate-600 space-y-1">
+                <div class="font-bold text-slate-800 mb-1"><i class="fa-solid fa-circle-info text-blue-600 mr-1"></i>Aturan Pengisian Kunci Jawaban di Excel:</div>
+                <div>• <b>PG</b> (Pilihan Ganda): Tulis 1 huruf kapital, contoh: <code class="bg-white px-1.5 py-0.5 rounded border font-bold text-blue-700">B</code></div>
+                <div>• <b>PGK</b> (Kotak Ceklis > 1 Jawaban): Pisahkan koma, contoh: <code class="bg-white px-1.5 py-0.5 rounded border font-bold text-purple-700">A,B,D</code></div>
+                <div>• <b>BS</b> (Benar / Salah Multi Pernyataan): Urutan B/S dipisah koma, contoh: <code class="bg-white px-1.5 py-0.5 rounded border font-bold text-emerald-700">S,B,B</code></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABEL PREVIEW HASIL PEMBACAAN FILE -->
+        ${previewRows.length > 0 ? `
+          <div class="bg-white rounded-2xl p-6 shadow-xs border border-blue-200 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                  <i class="fa-solid fa-table-list text-blue-600"></i>
+                  <span>Preview Hasil Pembacaan Soal (${previewRows.length} Baris)</span>
+                </h4>
+                <div class="flex flex-wrap items-center gap-2 mt-1.5 text-[11px]">
+                  <span class="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold">${validRows.length} Soal Siap Simpan</span>
+                  <span class="bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-full font-bold">${uniqueStimuliCount} Judul Stimulus Terdeteksi</span>
+                  ${invalidRows.length > 0 ? `<span class="bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded-full font-bold">${invalidRows.length} Baris Perlu Dicek</span>` : ''}
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  onclick="window.app.clearUploadPreview()"
+                  class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-semibold transition"
+                >
+                  Batal / Bersihkan
+                </button>
+                <button
+                  type="button"
+                  ${validRows.length === 0 || state.isUploadingSoal ? 'disabled' : ''}
+                  onclick="window.app.commitUploadedSoalToDatabase()"
+                  class="bg-[#0066FF] hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm transition"
+                >
+                  <i class="fa-solid ${state.isUploadingSoal ? 'fa-spinner fa-spin' : 'fa-cloud-arrow-up'}"></i>
+                  <span>${state.isUploadingSoal ? 'Menyimpan ke Database...' : `Simpan ${validRows.length} Soal ke Bank Soal`}</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto border border-slate-200 rounded-xl">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
+                    <th class="py-2.5 px-3">No</th>
+                    <th class="py-2.5 px-3">Stimulus</th>
+                    <th class="py-2.5 px-3">Jenis</th>
+                    <th class="py-2.5 px-3 min-w-[240px]">Pertanyaan & Opsi</th>
+                    <th class="py-2.5 px-3">Kunci</th>
+                    <th class="py-2.5 px-3">Bobot</th>
+                    <th class="py-2.5 px-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${previewRows.map((row, idx) => `
+                    <tr class="${row.valid ? 'hover:bg-blue-50/30' : 'bg-rose-50/70'} align-top">
+                      <td class="py-2.5 px-3 font-bold text-slate-700">${row.nomor_urut || (idx + 1)}</td>
+                      <td class="py-2.5 px-3">
+                        ${row.judul_stimulus ? `
+                          <div class="font-semibold text-indigo-700">${row.judul_stimulus}</div>
+                          <div class="text-[10px] text-slate-400 truncate max-w-[160px]">${row.isi_stimulus ? row.isi_stimulus.replace(/<[^>]*>/g, '').slice(0, 60) + '...' : '(Menggunakan stimulus yg sudah ada)'}</div>
+                        ` : '<span class="text-slate-400 italic text-[11px]">Tanpa Stimulus</span>'}
+                      </td>
+                      <td class="py-2.5 px-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                          row.jenis_soal === 'PGK' ? 'bg-purple-100 text-purple-700' : row.jenis_soal === 'BS' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                        }">${row.jenis_soal}</span>
+                      </td>
+                      <td class="py-2.5 px-3">
+                        <div class="font-medium text-slate-800 line-clamp-2">${row.pertanyaan || '<i class="text-rose-600">Kosong</i>'}</div>
+                        <div class="text-[10px] text-slate-500 mt-1 space-x-2">
+                          ${row.opsi_a ? `<span>A/1: ${row.opsi_a.slice(0,22)}</span>` : ''}
+                          ${row.opsi_b ? `<span>B/2: ${row.opsi_b.slice(0,22)}</span>` : ''}
+                        </div>
+                      </td>
+                      <td class="py-2.5 px-3 font-mono font-bold text-emerald-700">${row.kunci_jawaban || '-'}</td>
+                      <td class="py-2.5 px-3">${row.bobot}</td>
+                      <td class="py-2.5 px-3 whitespace-nowrap">
+                        ${row.valid ? `
+                          <span class="text-emerald-700 font-semibold text-[11px]"><i class="fa-solid fa-circle-check mr-1"></i>Siap</span>
+                        ` : `
+                          <span class="text-rose-700 font-semibold text-[11px]"><i class="fa-solid fa-circle-xmark mr-1"></i>${row.errorMsg}</span>
+                        `}
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ` : ''}
       </div>
     `;
   };
@@ -3407,10 +3621,10 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
         <div class="toolbar">
           <div>
             <div class="toolbar-title">Preview Cetak Kartu Peserta Simulasi TKA (${listSiswa.length} Peserta)</div>
-            <div class="toolbar-sub">${p.nama_sekolah} â€” Dilengkapi Sesi & Jadwal Pelaksanaan Ujian</div>
+            <div class="toolbar-sub">${p.nama_sekolah} — Dilengkapi Sesi & Jadwal Pelaksanaan Ujian</div>
           </div>
           <div class="toolbar-actions">
-            <button class="btn btn-print" onclick="window.print()">ðŸ–¨ï¸ Cetak Sekarang / Simpan PDF</button>
+            <button class="btn btn-print" onclick="window.print()">🖨️ Cetak Sekarang / Simpan PDF</button>
             <button class="btn btn-close" onclick="window.close()">Tutup Tab</button>
           </div>
         </div>
@@ -4210,6 +4424,427 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
       showToast('Berhasil mengimpor ' + countSuccess + ' data siswa!', 'success');
     },
 
+
+    // --- UPLOAD GAMBAR DARI KOMPUTER / HP (KOMPRESI OTOMATIS + SUPABASE STORAGE / FALLBACK DATA URL) ---
+    _compressAndUploadImage: (file, callback) => {
+      if (!file || !file.type.startsWith('image/')) {
+        showToast('Mohon pilih file gambar (.jpg, .png, .webp)!', 'warning');
+        return;
+      }
+      showToast('Memproses & mengompresi gambar...', 'info');
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = async () => {
+          const maxW = 820;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxW) {
+            h = Math.round((h * maxW) / w);
+            w = maxW;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+
+          // Coba upload ke Supabase Storage jika tersedia, jika tidak pakai Data URL terkompresi
+          const dataUrl = canvas.toDataURL('image/webp', 0.82);
+          if (!IS_PREVIEW && supabase) {
+            try {
+              const blob = await new Promise(res => canvas.toBlob(res, 'image/webp', 0.82));
+              if (blob) {
+                const fileName = 'stim-' + Date.now() + '-' + Math.floor(Math.random() * 1000) + '.webp';
+                const { error } = await supabase.storage.from('stimulus-images').upload(fileName, blob, { upsert: true });
+                if (!error) {
+                  const { data: pub } = supabase.storage.from('stimulus-images').getPublicUrl(fileName);
+                  if (pub && pub.publicUrl) {
+                    callback(pub.publicUrl);
+                    return;
+                  }
+                }
+              }
+            } catch (_) {}
+          }
+          callback(dataUrl);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    },
+
+    handleUploadImageToEditor: (e) => {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+      window.app._compressAndUploadImage(file, (imgUrl) => {
+        const editorEl = document.getElementById('st-editor-content');
+        if (editorEl) {
+          editorEl.focus();
+          document.execCommand('insertImage', false, imgUrl);
+        }
+        showToast('Gambar berhasil disisipkan ke dalam teks stimulus!', 'success');
+      });
+      e.target.value = '';
+    },
+
+    handleUploadMainStimulusImage: (e) => {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+      window.app._compressAndUploadImage(file, (imgUrl) => {
+        const inp = document.getElementById('st-gambar');
+        if (inp) inp.value = imgUrl;
+        window.app.previewMainStimulusImage(imgUrl);
+        showToast('Gambar utama stimulus berhasil diunggah! Jangan lupa klik Simpan Stimulus.', 'success');
+      });
+      e.target.value = '';
+    },
+
+    previewMainStimulusImage: (url) => {
+      const box = document.getElementById('st-gambar-preview-box');
+      const img = document.getElementById('st-gambar-preview-img');
+      if (!box || !img) return;
+      if (url && url.trim() !== '') {
+        img.src = url.trim();
+        box.classList.remove('hidden');
+      } else {
+        box.classList.add('hidden');
+      }
+    },
+
+    clearMainStimulusImage: () => {
+      const inp = document.getElementById('st-gambar');
+      if (inp) inp.value = '';
+      window.app.previewMainStimulusImage('');
+    },
+
+    // --- MENU UPLOAD SOAL MASSAL (EXCEL / CSV) ---
+    setUploadTargetMapel: (mapelId) => {
+      state.uploadTargetMapelId = mapelId;
+    },
+
+    clearUploadPreview: () => {
+      state.uploadPreviewRows = [];
+      state.uploadFileName = '';
+      const pasteEl = document.getElementById('upload-soal-paste-raw');
+      if (pasteEl) pasteEl.value = '';
+      render();
+    },
+
+    downloadTemplateSoalExcel: () => {
+      const headers = [
+        'Nomor Soal',
+        'Judul Stimulus',
+        'Isi Stimulus',
+        'URL Gambar Stimulus',
+        'Jenis Soal',
+        'Pertanyaan',
+        'Opsi A',
+        'Opsi B',
+        'Opsi C',
+        'Opsi D',
+        'Opsi E',
+        'Kunci Jawaban',
+        'Bobot'
+      ];
+
+      const sampleRows = [
+        [
+          1,
+          'Kantin Sehat Sekolahku',
+          '<p>Di Kantin Sehat SD Nusantara, harga 1 kotak susu cokelat adalah Rp4.000,00 dan harga 1 buah roti keju adalah Rp3.500,00. Lani membawa uang saku sebesar Rp15.000,00.</p>',
+          '',
+          'PG',
+          'Jika Lani membeli 2 kotak susu cokelat dan 1 roti keju, berapa rupiah sisa uang kembalian Lani?',
+          'Rp2.500,00',
+          'Rp3.500,00',
+          'Rp4.000,00',
+          'Rp11.500,00',
+          '',
+          'B',
+          25
+        ],
+        [
+          2,
+          'Kantin Sehat Sekolahku',
+          '',
+          '',
+          'PGK',
+          'Manakah pernyataan yang BENAR tentang belanjaan Lani di Kantin Sehat? (Centang lebih dari 1)',
+          'Harga 2 kotak susu cokelat adalah Rp8.000,00.',
+          'Uang Rp15.000,00 cukup untuk membeli 4 roti keju.',
+          'Jika Lani membeli 3 kotak susu, uangnya masih kurang.',
+          'Total harga 1 susu dan 1 roti adalah Rp7.500,00.',
+          '',
+          'A,B,D',
+          25
+        ],
+        [
+          3,
+          'Kisah Semut dan Burung Merpati',
+          '<p>Suatu hari seekor semut kecil terjatuh ke sungai. Burung merpati di atas pohon segera menjatuhkan sehelai daun agar semut bisa naik dan selamat ke tepi sungai.</p>',
+          '',
+          'BS',
+          'Tentukan Benar atau Salah untuk setiap pernyataan berdasarkan cerita di samping!',
+          'Burung merpati menolong semut dengan menjatuhkan sehelai daun.',
+          'Semut tenggelam karena daun tersebut terlalu kecil.',
+          'Cerita ini mengajarkan kita untuk saling menolong saat teman kesusahan.',
+          '',
+          '',
+          'B,S,B',
+          25
+        ],
+        [
+          4,
+          '',
+          '',
+          '',
+          'PG',
+          'Hasil penjumlahan pecahan 1/2 + 1/4 adalah...',
+          '1/6',
+          '2/6',
+          '3/4',
+          '4/4',
+          '',
+          'C',
+          25
+        ]
+      ];
+
+      if (window.XLSX) {
+        const ws = window.XLSX.utils.aoa_to_sheet([headers, ...sampleRows]);
+        ws['!cols'] = [
+          { wch: 10 }, { wch: 24 }, { wch: 45 }, { wch: 22 }, { wch: 12 },
+          { wch: 42 }, { wch: 24 }, { wch: 24 }, { wch: 24 }, { wch: 24 },
+          { wch: 16 }, { wch: 14 }, { wch: 8 }
+        ];
+        const wb = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(wb, ws, 'Template_Soal_TKA_SD');
+        window.XLSX.writeFile(wb, 'Template_Upload_Soal_TKA_SD.xlsx');
+        showToast('Template Excel (.xlsx) berhasil diunduh!', 'success');
+      } else {
+        // Fallback CSV download jika CDN XLSX offline
+        const csvLines = [headers, ...sampleRows].map(row =>
+          row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(';')
+        ).join('\r\n');
+        const blob = new Blob([csvLines], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'Template_Upload_Soal_TKA_SD.csv';
+        link.click();
+        showToast('Template CSV berhasil diunduh!', 'success');
+      }
+    },
+
+    _normalizeParsedSoalRows: (aoaRows) => {
+      const parsed = [];
+      aoaRows.forEach((cols, i) => {
+        if (!Array.isArray(cols) || cols.every(c => String(c || '').trim() === '')) return;
+        const firstCell = String(cols[0] || '').trim().toLowerCase();
+        const secondCell = String(cols[1] || '').trim().toLowerCase();
+        if (i === 0 && (firstCell.includes('nomor') || firstCell === 'no' || secondCell.includes('judul'))) return;
+
+        const nomorUrut = parseInt(String(cols[0] || '').trim(), 10) || (parsed.length + 1);
+        const judulStimulus = String(cols[1] || '').trim();
+        let isiStimulus = String(cols[2] || '').trim();
+        if (isiStimulus && !isiStimulus.includes('<p>') && !isiStimulus.includes('<div')) {
+          isiStimulus = '<p>' + isiStimulus.replace(/\n/g, '</p><p>') + '</p>';
+        }
+        const gambarStimulus = String(cols[3] || '').trim();
+        let jenis = String(cols[4] || 'PG').trim().toUpperCase();
+        if (!['PG', 'PGK', 'BS'].includes(jenis)) jenis = 'PG';
+
+        const pertanyaan = String(cols[5] || '').trim();
+        const opsiA = String(cols[6] || '').trim();
+        const opsiB = String(cols[7] || '').trim();
+        const opsiC = String(cols[8] || '').trim();
+        const opsiD = String(cols[9] || '').trim();
+        const opsiE = String(cols[10] || '').trim();
+        const kunci = String(cols[11] || '').trim().toUpperCase();
+        const bobot = parseInt(String(cols[12] || '').trim(), 10) || 10;
+
+        let valid = true;
+        let errorMsg = '';
+        if (!pertanyaan) {
+          valid = false;
+          errorMsg = 'Pertanyaan kosong';
+        } else if (!opsiA || !opsiB) {
+          valid = false;
+          errorMsg = 'Minimal isi Opsi A & B';
+        } else if (!kunci) {
+          valid = false;
+          errorMsg = 'Kunci kosong';
+        }
+
+        parsed.push({
+          nomor_urut: nomorUrut,
+          judul_stimulus: judulStimulus,
+          isi_stimulus: isiStimulus,
+          gambar_url: gambarStimulus,
+          jenis_soal: jenis,
+          pertanyaan,
+          opsi_a: opsiA,
+          opsi_b: opsiB,
+          opsi_c: opsiC,
+          opsi_d: opsiD,
+          opsi_e: opsiE,
+          kunci_jawaban: kunci,
+          bobot,
+          valid,
+          errorMsg
+        });
+      });
+      return parsed;
+    },
+
+    handleSoalExcelFileUpload: (e) => {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+      state.uploadFileName = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          if (file.name.toLowerCase().endsWith('.csv')) {
+            const text = String(ev.target.result || '');
+            const sep = text.includes(';') ? ';' : ',';
+            const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+            const aoa = lines.map(l => l.split(sep).map(c => c.trim().replace(/^"|"$/g, '').replace(/""/g, '"')));
+            state.uploadPreviewRows = window.app._normalizeParsedSoalRows(aoa);
+          } else if (window.XLSX) {
+            const data = new Uint8Array(ev.target.result);
+            const workbook = window.XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[firstSheetName];
+            const aoa = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            state.uploadPreviewRows = window.app._normalizeParsedSoalRows(aoa);
+          } else {
+            showToast('Library pembaca Excel belum siap. Gunakan format CSV atau Paste langsung.', 'error');
+            return;
+          }
+          render();
+          showToast('Berhasil membaca ' + state.uploadPreviewRows.length + ' baris soal untuk di-preview!', 'success');
+        } catch (err) {
+          showToast('Gagal membaca file Excel: ' + err.message, 'error');
+        }
+      };
+
+      if (file.name.toLowerCase().endsWith('.csv')) {
+        reader.readAsText(file);
+      } else {
+        reader.readAsArrayBuffer(file);
+      }
+      e.target.value = '';
+    },
+
+    parsePastedSoalText: () => {
+      const area = document.getElementById('upload-soal-paste-raw');
+      if (!area || !area.value.trim()) {
+        showToast('Area paste masih kosong!', 'warning');
+        return;
+      }
+      const lines = area.value.split(/\r?\n/).filter(l => l.trim() !== '');
+      const aoa = lines.map(line => line.split('\t'));
+      state.uploadFileName = 'Data Paste Clipboard';
+      state.uploadPreviewRows = window.app._normalizeParsedSoalRows(aoa);
+      render();
+      showToast('Berhasil memproses ' + state.uploadPreviewRows.length + ' baris soal!', 'success');
+    },
+
+    commitUploadedSoalToDatabase: async () => {
+      const mapelId = state.uploadTargetMapelId || state.mapelList[0]?.id;
+      if (!mapelId) {
+        showToast('Pilih Mata Ujian Target terlebih dahulu!', 'warning');
+        return;
+      }
+      const validRows = (state.uploadPreviewRows || []).filter(r => r.valid);
+      if (validRows.length === 0) {
+        showToast('Tidak ada soal valid untuk disimpan!', 'warning');
+        return;
+      }
+
+      state.isUploadingSoal = true;
+      render();
+
+      try {
+        // Kelompokkan & buat stimulus baru jika belum ada pada mapel ini
+        const stimulusCache = {};
+        state.stimulusList
+          .filter(st => st.mapel_id === mapelId)
+          .forEach(st => { stimulusCache[st.judul.trim().toLowerCase()] = st.id; });
+
+        // Pastikan soal tanpa judul stimulus tetap terhubung ke 1 stimulus umum (atau buat stimulus "Soal Umum")
+        const ensureStimulusId = async (judul, isi, gambar) => {
+          const cleanJudul = judul || 'Soal Mandiri (Tanpa Wacana Panjang)';
+          const key = cleanJudul.toLowerCase();
+          if (stimulusCache[key]) return stimulusCache[key];
+
+          const newSt = {
+            id: 'stim-' + Date.now() + '-' + Math.floor(Math.random() * 10000),
+            mapel_id: mapelId,
+            judul: cleanJudul,
+            konten_teks: isi || '<p>Bacalah pertanyaan di sebelah kanan dengan saksama.</p>',
+            gambar_url: gambar || ''
+          };
+
+          if (!IS_PREVIEW && supabase) {
+            const { data, error } = await supabase.from('stimulus').insert([{
+              mapel_id: newSt.mapel_id,
+              judul: newSt.judul,
+              konten_teks: newSt.konten_teks,
+              gambar_url: newSt.gambar_url
+            }]).select().single();
+            if (error) throw error;
+            if (data) newSt.id = data.id;
+          }
+
+          state.stimulusList.push(newSt);
+          stimulusCache[key] = newSt.id;
+          return newSt.id;
+        };
+
+        const insertedSoals = [];
+        for (const row of validRows) {
+          const stimId = await ensureStimulusId(row.judul_stimulus, row.isi_stimulus, row.gambar_url);
+          const qPayload = {
+            mapel_id: mapelId,
+            stimulus_id: stimId,
+            nomor_urut: row.nomor_urut,
+            jenis_soal: row.jenis_soal,
+            bobot: row.bobot,
+            pertanyaan: row.pertanyaan,
+            opsi_a: row.opsi_a,
+            opsi_b: row.opsi_b,
+            opsi_c: row.opsi_c,
+            opsi_d: row.opsi_d,
+            opsi_e: row.opsi_e,
+            kunci_jawaban: row.kunci_jawaban
+          };
+
+          if (!IS_PREVIEW && supabase) {
+            const { data, error } = await supabase.from('soal').insert([qPayload]).select().single();
+            if (error) throw error;
+            state.soalList.push(data);
+          } else {
+            state.soalList.push({ id: 'soal-' + Date.now() + '-' + Math.floor(Math.random() * 10000), ...qPayload });
+          }
+          insertedSoals.push(qPayload);
+        }
+
+        state.uploadPreviewRows = [];
+        state.uploadFileName = '';
+        state.isUploadingSoal = false;
+        showToast(`Berhasil menyimpan ${insertedSoals.length} butir soal ke Bank Soal!`, 'success');
+        state.activeManageMapelId = mapelId;
+        state.adminTab = 'mapel';
+        render();
+      } catch (err) {
+        state.isUploadingSoal = false;
+        render();
+        showToast('Gagal menyimpan soal: ' + err.message, 'error');
+      }
+    },
+
     // --- CRUD DATA MAPEL ---
     handleAddMapel: async (e) => {
       if (e) e.preventDefault();
@@ -4852,7 +5487,16 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
 
     if (IS_PREVIEW) {
       initPreviewDummyData();
-    } else {
+    } else if (supabase) {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData && sessionData.session) {
+          state.adminSession = sessionData.session;
+        }
+        supabase.auth.onAuthStateChange((_event, session) => {
+          state.adminSession = session || null;
+        });
+      } catch (_) {}
       await fetchAllDatabase();
       setupRealtimeMonitoring();
     }
