@@ -1,0 +1,18 @@
+# Dependensi & Cache
+node_modules/
+.npm/
+
+# Lingkungan & Rahasia
+.env
+.env.local
+*.log
+
+# File Sistem Operasi & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# File Temporary / Scratch
+scratch/
+*.tmp
