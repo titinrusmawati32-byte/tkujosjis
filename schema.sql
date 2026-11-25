@@ -152,6 +152,36 @@ CREATE POLICY "Admin Full Access Hasil Ujian" ON public.hasil_ujian FOR ALL USIN
 -- SEED DATA DEFAULT (KHUSUS TKA SD)
 -- ============================================================================
 
-INSERT INTO public.pengaturan_sekolah (id, nama_instansi, nama_aplikasi, nama_sekolah, token_aktif, max_pelanggaran)
-VALUES ('cfg-1', 'PUSMENDIK', 'APLIKASI TKA & ANBK SD', 'SD NEGERI 1 SIMULASI TKA', 'SD26A', 3)
+INSERT INTO public.pengaturan_sekolah (id, nama_instansi, nama_aplikasi, nama_sekolah, logo_url, token_aktif, max_pelanggaran)
+VALUES ('cfg-1', 'PUSMENDIK', 'APLIKASI TKA & ANBK SD', 'SD NEGERI 1 SIMULASI TKA', '', 'SD26A', 3)
 ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- OPSIONAL: BUCKET SUPABASE STORAGE UNTUK UPLOAD GAMBAR STIMULUS & LOGO
+-- (Jika tidak dijalankan, aplikasi otomatis memakai Data URL terkompresi)
+-- ============================================================================
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('stimulus-images', 'stimulus-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Public Read Stimulus Images'
+  ) THEN
+    CREATE POLICY "Public Read Stimulus Images" ON storage.objects FOR SELECT USING (bucket_id = 'stimulus-images');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Admin Upload Stimulus Images'
+  ) THEN
+    CREATE POLICY "Admin Upload Stimulus Images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'stimulus-images' AND auth.role() = 'authenticated');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Admin Delete Stimulus Images'
+  ) THEN
+    CREATE POLICY "Admin Delete Stimulus Images" ON storage.objects FOR DELETE USING (bucket_id = 'stimulus-images' AND auth.role() = 'authenticated');
+  END IF;
+END $$;

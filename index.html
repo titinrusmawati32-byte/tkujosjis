@@ -686,7 +686,11 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
 
       const [cfgRes, rngRes, sesRes, mplRes, sisRes, jdwRes, stmRes, solRes, hslRes] = results;
 
-      if (cfgRes.data && cfgRes.data[0]) state.pengaturan = cfgRes.data[0];
+      if (cfgRes.data && cfgRes.data[0]) {
+        const cfg = cfgRes.data[0];
+        if (!cfg.logo_url || cfg.logo_url === 'null') cfg.logo_url = '';
+        state.pengaturan = cfg;
+      }
       state.ruangList = rngRes.data || [];
       state.sesiList = sesRes.data || [];
       state.mapelList = mplRes.data || [];
@@ -833,7 +837,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
       <header class="anbk-header-bg h-28 md:h-32 w-full px-6 md:px-12 flex items-start pt-5 justify-between text-white select-none no-print">
         <div class="flex items-center gap-3.5 z-10">
           <div class="w-12 h-12 rounded-full bg-white/15 p-1.5 flex items-center justify-center backdrop-blur-sm shadow-inner">
-            <img src="${state.pengaturan.logo_url || DEFAULT_LOGO_SVG}" alt="Logo" class="w-full h-full object-contain" onerror="this.onerror=null;this.src='${DEFAULT_LOGO_SVG}'" />
+            <img src="${(state.pengaturan.logo_url && state.pengaturan.logo_url !== 'null') ? state.pengaturan.logo_url : DEFAULT_LOGO_SVG}" alt="Logo" class="w-full h-full object-contain" onerror="this.onerror=null;this.src='${DEFAULT_LOGO_SVG}'" />
           </div>
           <div class="leading-tight">
             <h1 class="font-bold text-base md:text-lg tracking-wide uppercase">${state.pengaturan.nama_instansi || 'PUSMENDIK'}</h1>
@@ -1670,7 +1674,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
         <aside class="admin-sidebar w-64 h-full glass-panel border-r border-slate-200/80 flex-col justify-between shrink-0 select-none no-print overflow-y-auto">
           <div>
             <div class="p-5 border-b border-slate-200/70 flex items-center gap-3">
-              <img src="${state.pengaturan.logo_url || DEFAULT_LOGO_SVG}" class="w-9 h-9 object-contain" alt="Logo" onerror="this.onerror=null;this.src='${DEFAULT_LOGO_SVG}'" />
+              <img src="${(state.pengaturan.logo_url && state.pengaturan.logo_url !== 'null') ? state.pengaturan.logo_url : DEFAULT_LOGO_SVG}" class="w-9 h-9 object-contain" alt="Logo" onerror="this.onerror=null;this.src='${DEFAULT_LOGO_SVG}'" />
               <div class="overflow-hidden">
                 <h2 class="font-bold text-sm text-slate-800 truncate">${state.pengaturan.nama_instansi}</h2>
                 <p class="text-[11px] text-slate-500 truncate">${state.pengaturan.nama_sekolah}</p>
@@ -3470,8 +3474,15 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
           </div>
 
           <div>
-            <label class="block font-semibold text-slate-600 mb-1">URL Logo Sekolah / Kemendikbud</label>
-            <input type="text" id="p-logo" required value="${p.logo_url}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200" />
+            <label class="block font-semibold text-slate-600 mb-1">URL Logo Sekolah / Kemendikbud (Opsional)</label>
+            <div class="flex flex-wrap items-center gap-2">
+              <input type="text" id="p-logo" value="${(!p.logo_url || p.logo_url === 'null') ? '' : p.logo_url}" placeholder="Kosongkan untuk pakai logo default PUSMENDIK" class="flex-1 min-w-[200px] px-3.5 py-2.5 rounded-xl border border-slate-200" />
+              <label class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 rounded-xl font-semibold cursor-pointer flex items-center gap-1.5 shrink-0 transition shadow-xs">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Upload Logo</span>
+                <input type="file" accept="image/*" class="hidden" onchange="window.app.handleUploadLogoSekolah(event)" />
+              </label>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3636,7 +3647,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
               return `
                 <div class="card">
                   <div class="card-header">
-                    <img src="${p.logo_url || DEFAULT_LOGO_SVG}" alt="Logo" />
+                    <img src="${(p.logo_url && p.logo_url !== 'null') ? p.logo_url : DEFAULT_LOGO_SVG}" alt="Logo" />
                     <div class="card-header-text">
                       <h4>${p.nama_instansi} - KARTU PESERTA SIMULASI TKA</h4>
                       <p>${p.nama_sekolah}</p>
@@ -5352,7 +5363,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
           </div>
 
           <div class="kop">
-            <img src="${p.logo_url || DEFAULT_LOGO_SVG}" alt="Logo" />
+            <img src="${(p.logo_url && p.logo_url !== 'null') ? p.logo_url : DEFAULT_LOGO_SVG}" alt="Logo" />
             <div class="kop-text">
               <h2>${p.nama_instansi} - DINAS PENDIDIKAN</h2>
               <h3>${p.nama_sekolah}</h3>
@@ -5421,12 +5432,24 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
     },
 
     // --- PENGATURAN SEKOLAH ---
+    handleUploadLogoSekolah: (e) => {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+      window.app._compressAndUploadImage(file, (imgUrl) => {
+        const inp = document.getElementById('p-logo');
+        if (inp) inp.value = imgUrl;
+        showToast('Logo sekolah berhasil diunggah! Klik Simpan Pengaturan untuk menyimpan.', 'success');
+      });
+      e.target.value = '';
+    },
+
     handleSavePengaturan: async (e) => {
       if (e) e.preventDefault();
       const instansi = document.getElementById('p-instansi')?.value.trim();
       const aplikasi = document.getElementById('p-aplikasi')?.value.trim();
       const sekolah = document.getElementById('p-sekolah')?.value.trim();
-      const logo = document.getElementById('p-logo')?.value.trim();
+      const rawLogo = document.getElementById('p-logo')?.value.trim();
+      const logo = (rawLogo && rawLogo !== 'null') ? rawLogo : '';
       const token = document.getElementById('p-token')?.value.trim().toUpperCase();
       const maxP = parseInt(document.getElementById('p-max')?.value, 10) || 3;
 
