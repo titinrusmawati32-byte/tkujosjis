@@ -321,6 +321,9 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
     editingSoalId: null,
     builderJenisSoal: 'PG',
     showImportSiswaModal: false,
+    siswaUploadPreview: [],
+    siswaUploadFileName: '',
+    isUploadingSiswa: false,
     uploadTargetMapelId: '',
     uploadPreviewRows: [],
     uploadFileName: '',
@@ -2454,7 +2457,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
                 class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
               >
                 <i class="fa-solid fa-file-import"></i>
-                <span>Import Data Siswa</span>
+                <span>Upload Siswa (Excel)</span>
               </button>
               <button
                 onclick="window.app.setAdminTab('pengaturan_sesi')"
@@ -2575,57 +2578,129 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
           </table>
         </div>
 
-        <!-- MODAL IMPORT DATA SISWA (CSV / COPY-PASTE EXCEL) -->
+        <!-- MODAL UPLOAD DATA SISWA MASSAL (TEMPLATE EXCEL / CSV / PREVIEW) -->
         ${state.showImportSiswaModal ? `
           <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6">
-              <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+              <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
                 <div>
-                  <h3 class="font-bold text-slate-800 text-base">Import Data Siswa Massal (CSV / Excel)</h3>
-                  <p class="text-[11px] text-slate-500">Unggah file CSV atau salin-tempel (Copy-Paste) baris data dari Microsoft Excel / Google Sheets.</p>
+                  <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                    <span>Upload Data Siswa Massal (Template Excel)</span>
+                  </h3>
+                  <p class="text-[11px] text-slate-500">Unduh template Excel, isi data peserta SD, lalu unggah file (.xlsx / .csv) atau paste dari Excel.</p>
                 </div>
-                <button onclick="window.app.toggleImportSiswaModal(false)" class="text-slate-400 hover:text-slate-700">
+                <button onclick="window.app.toggleImportSiswaModal(false)" class="text-slate-400 hover:text-slate-700 p-1">
                   <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
               </div>
 
-              <div class="space-y-4 text-xs">
-                <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-blue-900">
-                  <div class="font-bold mb-1">Format Urutan Kolom (Dipisahkan Koma <code class="bg-white px-1 rounded">,</code> atau Titik Koma <code class="bg-white px-1 rounded">;</code> atau Tab Excel):</div>
-                  <code class="block bg-white p-2 rounded border border-blue-100 font-mono text-[11px] text-slate-700">
-                    username, password, nama_lengkap, jenis_kelamin, tgl_lahir
-                  </code>
-                  <div class="mt-1.5 text-[11px] text-blue-700">
-                    Contoh: <code class="font-mono">pst001, 12345, Budi Santoso, Laki-Laki, 14-03-2011</code>
+              <div class="p-6 overflow-y-auto space-y-4 text-xs">
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3">
+                  <div class="text-blue-900 space-y-1">
+                    <div class="font-bold">1. Unduh Template Excel Resmi Terlebih Dahulu</div>
+                    <div class="text-[11px] text-blue-700">Kolom: <code class="bg-white px-1.5 py-0.5 rounded border border-blue-200 font-mono">Username | Password | Nama Lengkap | Jenis Kelamin | Tanggal Lahir</code></div>
+                  </div>
+                  <button
+                    type="button"
+                    onclick="window.app.downloadTemplateSiswaExcel()"
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 shadow-xs shrink-0 transition"
+                  >
+                    <i class="fa-solid fa-download"></i>
+                    <span>Download Template Excel (.xlsx)</span>
+                  </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1.5">2. Unggah File Excel (.xlsx, .xls) / CSV:</label>
+                    <label class="flex flex-col items-center justify-center border-2 border-dashed border-blue-300 hover:border-blue-500 bg-blue-50/40 hover:bg-blue-50/80 rounded-xl p-5 cursor-pointer transition text-center h-[136px]">
+                      <i class="fa-solid fa-cloud-arrow-up text-2xl text-blue-600 mb-1.5"></i>
+                      <div class="font-bold text-slate-800">
+                        ${state.siswaUploadFileName ? `File: <span class="text-blue-600">${state.siswaUploadFileName}</span>` : 'Klik untuk pilih file Excel (.xlsx / .csv)'}
+                      </div>
+                      <span class="text-[10px] text-slate-500 mt-1">Otomatis membaca isi sheet pertama</span>
+                      <input
+                        type="file"
+                        accept=".xlsx,.xls,.csv,.txt"
+                        class="hidden"
+                        onchange="window.app.handleSiswaExcelFileUpload(event)"
+                      />
+                    </label>
+                  </div>
+
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1.5">Atau Paste Langsung Baris dari Excel:</label>
+                    <textarea
+                      id="import-siswa-raw"
+                      rows="4"
+                      placeholder="sd001&#9;12345&#9;Alif Bintang Pratama&#9;Laki-Laki&#9;14-06-2014&#10;sd002&#9;12345&#9;Naila Putri Kirana&#9;Perempuan&#9;22-09-2014"
+                      class="w-full p-2.5 rounded-xl border border-slate-200 font-mono text-[11px] bg-slate-50 focus:bg-white"
+                    ></textarea>
+                    <div class="flex justify-end mt-1.5">
+                      <button
+                        type="button"
+                        onclick="window.app.parsePastedSiswaText()"
+                        class="bg-slate-800 hover:bg-slate-900 text-white px-3.5 py-1.5 rounded-lg font-semibold text-[11px]"
+                      >
+                        <i class="fa-solid fa-magnifying-glass mr-1"></i>Preview Data Paste
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <label class="block font-semibold text-slate-700 mb-1">1. Pilih File CSV dari Komputer (Opsional):</label>
-                  <input
-                    type="file"
-                    accept=".csv,.txt"
-                    onchange="window.app.handleCSVFileSelect(event)"
-                    class="w-full text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                </div>
+                ${(state.siswaUploadPreview || []).length > 0 ? `
+                  <div class="border border-blue-200 rounded-xl overflow-hidden">
+                    <div class="bg-blue-50/70 px-4 py-2.5 border-b border-blue-200 flex flex-wrap items-center justify-between gap-2">
+                      <div class="font-bold text-slate-800">
+                        Preview Data Siswa (${state.siswaUploadPreview.length} baris —
+                        <span class="text-emerald-700">${state.siswaUploadPreview.filter(x => x.valid).length} siap simpan</span>)
+                      </div>
+                      <button type="button" onclick="window.app.clearSiswaUploadPreview()" class="text-rose-600 hover:underline font-semibold text-[11px]">Bersihkan Preview</button>
+                    </div>
+                    <div class="max-h-52 overflow-y-auto">
+                      <table class="w-full text-left border-collapse text-[11px]">
+                        <thead>
+                          <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
+                            <th class="py-2 px-3">Username</th>
+                            <th class="py-2 px-3">Password</th>
+                            <th class="py-2 px-3">Nama Lengkap</th>
+                            <th class="py-2 px-3">L/P</th>
+                            <th class="py-2 px-3">Tgl Lahir</th>
+                            <th class="py-2 px-3">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                          ${state.siswaUploadPreview.map(r => `
+                            <tr class="${r.valid ? '' : 'bg-rose-50/70'}">
+                              <td class="py-1.5 px-3 font-mono font-bold text-blue-700">${r.username || '-'}</td>
+                              <td class="py-1.5 px-3 font-mono">${r.password}</td>
+                              <td class="py-1.5 px-3 font-medium">${r.nama_lengkap || '-'}</td>
+                              <td class="py-1.5 px-3">${r.jenis_kelamin}</td>
+                              <td class="py-1.5 px-3 font-mono">${r.tgl_lahir}</td>
+                              <td class="py-1.5 px-3">
+                                ${r.valid ? '<span class="text-emerald-700 font-semibold"><i class="fa-solid fa-check mr-1"></i>Siap</span>' : `<span class="text-rose-700 font-semibold">${r.errorMsg}</span>`}
+                              </td>
+                            </tr>
+                          `).join('')}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
 
-                <div>
-                  <label class="block font-semibold text-slate-700 mb-1">2. Atau Paste Data Baris Siswa di Bawah Ini:</label>
-                  <textarea
-                    id="import-siswa-raw"
-                    rows="6"
-                    placeholder="pst001, 12345, Ahmad Fauzi, Laki-Laki, 12-04-2011&#10;pst002, 12345, Citra Lestari, Perempuan, 25-09-2011"
-                    class="w-full p-3 rounded-xl border border-slate-200 font-mono text-xs"
-                  ></textarea>
-                </div>
-
-                <div class="flex items-center justify-end gap-2 pt-2">
-                  <button type="button" onclick="window.app.toggleImportSiswaModal(false)" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">Batal</button>
-                  <button type="button" onclick="window.app.processImportSiswa()" class="bg-[#0066FF] hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-semibold shadow-sm">
-                    <i class="fa-solid fa-cloud-arrow-up mr-1"></i>Proses Import Siswa
-                  </button>
-                </div>
+              <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2">
+                <button type="button" onclick="window.app.toggleImportSiswaModal(false)" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-200 font-semibold text-xs">Batal</button>
+                <button
+                  type="button"
+                  ${(state.siswaUploadPreview || []).filter(x => x.valid).length === 0 || state.isUploadingSiswa ? 'disabled' : ''}
+                  onclick="window.app.commitUploadedSiswaToDatabase()"
+                  class="bg-[#0066FF] hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2 rounded-xl font-bold text-xs shadow-sm flex items-center gap-1.5"
+                >
+                  <i class="fa-solid ${state.isUploadingSiswa ? 'fa-spinner fa-spin' : 'fa-cloud-arrow-up'}"></i>
+                  <span>${state.isUploadingSiswa ? 'Menyimpan...' : `Simpan ${(state.siswaUploadPreview || []).filter(x => x.valid).length} Siswa ke Database`}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -4359,82 +4434,201 @@ const SUPABASE_ANON_KEY = "sb_publishable_QSUPiOKdAm2J0X4lCHAR5A_1sLqB7Gp";
 
     toggleImportSiswaModal: (show) => {
       state.showImportSiswaModal = !!show;
+      if (!show) {
+        state.siswaUploadPreview = [];
+        state.siswaUploadFileName = '';
+      }
       render();
     },
 
-    handleCSVFileSelect: (e) => {
-      const file = e.target?.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const txt = event.target?.result;
-        const area = document.getElementById('import-siswa-raw');
-        if (area && txt) {
-          area.value = txt;
-        }
-      };
-      reader.readAsText(file);
+    clearSiswaUploadPreview: () => {
+      state.siswaUploadPreview = [];
+      state.siswaUploadFileName = '';
+      const area = document.getElementById('import-siswa-raw');
+      if (area) area.value = '';
+      render();
     },
 
-    processImportSiswa: async () => {
+    downloadTemplateSiswaExcel: () => {
+      const headers = [
+        'Username',
+        'Password',
+        'Nama Lengkap',
+        'Jenis Kelamin (Laki-Laki / Perempuan)',
+        'Tanggal Lahir (DD-MM-YYYY)'
+      ];
+      const sampleRows = [
+        ['sd001', '12345', 'Alif Bintang Pratama', 'Laki-Laki', '14-06-2014'],
+        ['sd002', '12345', 'Naila Putri Kirana', 'Perempuan', '22-09-2014'],
+        ['sd003', '12345', 'Rian Aditya Saputra', 'Laki-Laki', '08-01-2015']
+      ];
+
+      if (window.XLSX) {
+        const ws = window.XLSX.utils.aoa_to_sheet([headers, ...sampleRows]);
+        ws['!cols'] = [{ wch: 16 }, { wch: 14 }, { wch: 30 }, { wch: 28 }, { wch: 24 }];
+        const wb = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(wb, ws, 'Template_Siswa_SD');
+        window.XLSX.writeFile(wb, 'Template_Upload_Siswa_TKA_SD.xlsx');
+        showToast('Template Excel Siswa (.xlsx) berhasil diunduh!', 'success');
+      } else {
+        const csv = [headers, ...sampleRows].map(r => r.join(';')).join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'Template_Upload_Siswa_TKA_SD.csv';
+        link.click();
+        showToast('Template CSV Siswa berhasil diunduh!', 'success');
+      }
+    },
+
+    _normalizeSiswaRows: (aoaRows) => {
+      const existingSet = new Set(state.siswaList.map(s => s.username.toLowerCase()));
+      const batchSet = new Set();
+      const parsed = [];
+
+      aoaRows.forEach((cols, idx) => {
+        if (!Array.isArray(cols) || cols.every(c => String(c || '').trim() === '')) return;
+        const c0 = String(cols[0] || '').trim().toLowerCase();
+        if (idx === 0 && (c0 === 'username' || c0 === 'no' || c0.includes('user'))) return;
+
+        const username = String(cols[0] || '').trim();
+        const password = String(cols[1] || '12345').trim();
+        const nama = String(cols[2] || '').trim();
+        const rawJk = String(cols[3] || 'Laki-Laki').trim().toLowerCase();
+        const jenis_kelamin = (rawJk.startsWith('p') || rawJk.includes('wanita')) ? 'Perempuan' : 'Laki-Laki';
+
+        let tgl = String(cols[4] || '14-06-2014').trim();
+        if (/^\d{5}$/.test(tgl)) {
+          const dt = new Date(Math.round((Number(tgl) - 25569) * 86400 * 1000));
+          const dd = String(dt.getUTCDate()).padStart(2, '0');
+          const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+          const yyyy = dt.getUTCFullYear();
+          tgl = `${dd}-${mm}-${yyyy}`;
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(tgl)) {
+          const [y, m, d] = tgl.split('-');
+          tgl = `${d}-${m}-${y}`;
+        }
+
+        let valid = true;
+        let errorMsg = '';
+        if (!username || !nama) {
+          valid = false;
+          errorMsg = 'Username/Nama kosong';
+        } else if (existingSet.has(username.toLowerCase())) {
+          valid = false;
+          errorMsg = 'Username sudah terdaftar';
+        } else if (batchSet.has(username.toLowerCase())) {
+          valid = false;
+          errorMsg = 'Duplikat di file';
+        } else {
+          batchSet.add(username.toLowerCase());
+        }
+
+        parsed.push({ username, password, nama_lengkap: nama, jenis_kelamin, tgl_lahir: tgl, valid, errorMsg });
+      });
+
+      return parsed;
+    },
+
+    handleSiswaExcelFileUpload: (e) => {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+      state.siswaUploadFileName = file.name;
+      const lower = file.name.toLowerCase();
+      const reader = new FileReader();
+
+      reader.onload = (ev) => {
+        try {
+          if (lower.endsWith('.csv') || lower.endsWith('.txt')) {
+            const txt = String(ev.target.result || '');
+            const sep = txt.includes(';') ? ';' : (txt.includes('\t') ? '\t' : ',');
+            const aoa = txt.split(/\r?\n/).filter(l => l.trim()).map(l => l.split(sep).map(c => c.trim().replace(/^["']|["']$/g, '')));
+            state.siswaUploadPreview = window.app._normalizeSiswaRows(aoa);
+          } else if (window.XLSX) {
+            const data = new Uint8Array(ev.target.result);
+            const wb = window.XLSX.read(data, { type: 'array' });
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            const aoa = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            state.siswaUploadPreview = window.app._normalizeSiswaRows(aoa);
+          } else {
+            showToast('Library pembaca Excel belum siap. Gunakan CSV atau Paste.', 'error');
+            return;
+          }
+          render();
+          showToast('Berhasil membaca ' + state.siswaUploadPreview.length + ' baris data siswa!', 'success');
+        } catch (err) {
+          showToast('Gagal membaca file: ' + err.message, 'error');
+        }
+      };
+
+      if (lower.endsWith('.csv') || lower.endsWith('.txt')) reader.readAsText(file);
+      else reader.readAsArrayBuffer(file);
+      e.target.value = '';
+    },
+
+    parsePastedSiswaText: () => {
       const area = document.getElementById('import-siswa-raw');
       if (!area || !area.value.trim()) {
-        showToast('Kolom data import masih kosong!', 'warning');
+        showToast('Kolom paste masih kosong!', 'warning');
+        return;
+      }
+      const lines = area.value.split(/\r?\n/).filter(l => l.trim());
+      const aoa = lines.map(l => {
+        const sep = l.includes('\t') ? '\t' : (l.includes(';') ? ';' : ',');
+        return l.split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
+      });
+      state.siswaUploadFileName = 'Data Paste Clipboard';
+      state.siswaUploadPreview = window.app._normalizeSiswaRows(aoa);
+      render();
+      showToast('Berhasil memproses ' + state.siswaUploadPreview.length + ' baris untuk di-preview!', 'success');
+    },
+
+    commitUploadedSiswaToDatabase: async () => {
+      const validRows = (state.siswaUploadPreview || []).filter(r => r.valid);
+      if (validRows.length === 0) {
+        showToast('Tidak ada data siswa valid untuk disimpan!', 'warning');
         return;
       }
 
-      const rawLines = area.value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-      let countSuccess = 0;
-      const toInsertDb = [];
-
-      rawLines.forEach((line) => {
-        // Abaikan header jika ada
-        if (line.toLowerCase().startsWith('username') || line.toLowerCase().startsWith('no,')) return;
-
-        // Split koma, titik koma, atau tab
-        const cols = line.split(/[,;\t]/).map(c => c.trim().replace(/^["']|["']$/g, ''));
-        if (cols.length >= 3) {
-          const user = cols[0];
-          const pass = cols[1] || '123';
-          const nama = cols[2];
-          const jk = cols[3] || 'Laki-Laki';
-          const tgl = cols[4] || '15-05-2011';
-
-          // Cek apakah username sudah ada
-          const exists = state.siswaList.find(s => s.username.toLowerCase() === user.toLowerCase());
-          if (!exists) {
-            const newItem = {
-              id: 'siswa-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-              username: user,
-              password: pass,
-              nama_lengkap: nama,
-              jenis_kelamin: jk,
-              tgl_lahir: tgl
-            };
-            state.siswaList.push(newItem);
-            toInsertDb.push({
-              username: user,
-              password: pass,
-              nama_lengkap: nama,
-              jenis_kelamin: jk,
-              tgl_lahir: tgl
-            });
-            countSuccess++;
-          }
-        }
-      });
-
-      if (!IS_PREVIEW && supabase && toInsertDb.length > 0) {
-        try {
-          await supabase.from('siswa').insert(toInsertDb);
-        } catch (_) {}
-      }
-
-      state.showImportSiswaModal = false;
+      state.isUploadingSiswa = true;
       render();
-      showToast('Berhasil mengimpor ' + countSuccess + ' data siswa!', 'success');
-    },
 
+      try {
+        const toInsertDb = validRows.map(r => ({
+          username: r.username,
+          password: r.password,
+          nama_lengkap: r.nama_lengkap,
+          jenis_kelamin: r.jenis_kelamin,
+          tgl_lahir: r.tgl_lahir
+        }));
+
+        if (!IS_PREVIEW && supabase) {
+          const { data, error } = await supabase.from('siswa').insert(toInsertDb).select();
+          if (error) throw error;
+          if (data && data.length > 0) {
+            state.siswaList.push(...data);
+          }
+        } else {
+          validRows.forEach((r, idx) => {
+            state.siswaList.push({
+              id: 'siswa-' + Date.now() + '-' + idx,
+              ...toInsertDb[idx]
+            });
+          });
+        }
+
+        state.siswaUploadPreview = [];
+        state.siswaUploadFileName = '';
+        state.isUploadingSiswa = false;
+        state.showImportSiswaModal = false;
+        render();
+        showToast('Berhasil menyimpan ' + validRows.length + ' data siswa ke database!', 'success');
+      } catch (err) {
+        state.isUploadingSiswa = false;
+        render();
+        showToast('Gagal menyimpan siswa ke database: ' + err.message, 'error');
+      }
+    },
 
     // --- UPLOAD GAMBAR DARI KOMPUTER / HP (KOMPRESI OTOMATIS + SUPABASE STORAGE / FALLBACK DATA URL) ---
     _compressAndUploadImage: (file, callback) => {
